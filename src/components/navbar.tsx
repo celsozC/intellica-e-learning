@@ -1,11 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  User,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +22,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
   const { setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,9 +63,52 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Link href="/login">
-            <Button variant="outline">Login</Button>
-          </Link>
+          {loading ? (
+            "Loading..."
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <div className="flex flex-col items-start text-sm">
+                    <span>
+                      {user.fullName}
+                      {" / "}
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {user.role.name}
+                      </span>
+                    </span>
+                  </div>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/login">
+              <Button variant="outline">Login</Button>
+            </Link>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
