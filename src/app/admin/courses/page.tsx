@@ -3,10 +3,28 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, Trash2, Search, Eye } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Search,
+  Eye,
+  AlertTriangle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -40,6 +58,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -63,20 +82,28 @@ export default function CoursesPage() {
     }
   }, [user, toast]);
 
-  const handleDeleteCourse = async (id: string) => {
+  const handleDeleteClick = (courseId: string) => {
+    setCourseToDelete(courseId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!courseToDelete) return;
+
     try {
-      await axios.delete(`/api/admin/courses/${id}`);
+      await axios.delete(`/api/admin/courses/${courseToDelete}`);
       toast({
         title: "Success",
         description: "Course deleted successfully",
       });
-      setCourses(courses.filter((course) => course.id !== id));
+      setCourses(courses.filter((course) => course.id !== courseToDelete));
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete course",
         variant: "destructive",
       });
+    } finally {
+      setCourseToDelete(null);
     }
   };
 
@@ -117,7 +144,7 @@ export default function CoursesPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button onClick={() => router.push("/admin/courses/new")}>
+              <Button onClick={() => router.push("/admin/courses/create")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Course
               </Button>
@@ -179,13 +206,44 @@ export default function CoursesPage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteCourse(course.id)}
+                        <AlertDialog
+                          open={courseToDelete === course.id}
+                          onOpenChange={(isOpen) => {
+                            if (!isOpen) setCourseToDelete(null);
+                          }}
                         >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick(course.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-red-500" />
+                                Delete Course
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete &quot;
+                                {course.title}&quot;? This action cannot be
+                                undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleConfirmDelete}
+                                className="bg-red-500 hover:bg-red-600"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>

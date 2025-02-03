@@ -63,6 +63,7 @@ export default function LessonSubmissionsPage() {
         `/api/teacher/course/${params.id}/lessons/${params.lessonId}/submissions`
       );
       console.log("Fetched submissions:", response.data);
+      console.log("CELSOGOD: " + response.data.submissions);
       setSubmissions(response.data.submissions);
     } catch (error) {
       console.error("Error fetching submissions:", error);
@@ -86,6 +87,7 @@ export default function LessonSubmissionsPage() {
         lessonName: data.lessonName,
       });
     } catch (error) {
+      console.error("Error fetching course information:", error);
       toast({
         title: "Error",
         description: "Failed to fetch course information",
@@ -99,7 +101,6 @@ export default function LessonSubmissionsPage() {
   const handleGrade = async (submissionId: string) => {
     try {
       console.log("Attempting to grade submission:", { submissionId });
-
       if (!submissionId) {
         console.error("No submission ID provided");
         toast({
@@ -302,9 +303,9 @@ export default function LessonSubmissionsPage() {
                           />
                         </div>
                         <Button
-                          onClick={() => handleGrade(submission._id)}
+                          onClick={() => handleGrade(submission.id)}
                           className="w-full sm:w-auto"
-                          disabled={submittingGrade === submission._id}
+                          disabled={submittingGrade === submission.id}
                         >
                           {submittingGrade === submission._id ? (
                             <>

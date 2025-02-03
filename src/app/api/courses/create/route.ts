@@ -5,8 +5,8 @@ import { verifyJWT } from "@/lib/jwt";
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
-    const token = await cookieStore.get("token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,6 +57,7 @@ export async function POST(request: Request) {
         teacherId: teacher.id, // Assign to the authenticated teacher
         lessonCount: 0,
         studentCount: 0,
+        categoryId: data.categoryId,
       },
       include: {
         teacher: {

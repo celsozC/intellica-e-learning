@@ -55,7 +55,7 @@ export async function GET(
         });
 
         return {
-          id: submission._id,
+          id: submission.id,
           fileUrl: submission.fileUrl,
           score: submission.score,
           feedback: submission.feedback,
@@ -86,6 +86,7 @@ export async function POST(
   request: Request,
   { params }: { params: { id: string; lessonId: string } }
 ) {
+  console.log("POST request received");
   try {
     const cookieStore = await cookies();
     const token = await cookieStore.get("token");
