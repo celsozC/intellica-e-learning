@@ -7,7 +7,6 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
-  Settings,
   User,
   Loader2,
 } from "lucide-react";
@@ -25,7 +24,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
