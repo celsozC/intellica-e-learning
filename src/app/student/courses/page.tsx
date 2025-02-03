@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Users, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
 
 interface Course {
   id: string;
@@ -21,8 +22,11 @@ interface Course {
   teacher: {
     fullName: string;
   };
-  lessonCount: number;
-  studentCount: number;
+  _count: {
+    lessons: number;
+    enrollments: number;
+  };
+  createdAt: string;
 }
 
 export default function CoursesPage() {
@@ -33,10 +37,8 @@ export default function CoursesPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("/api/courses");
-        if (!response.ok) throw new Error("Failed to fetch courses");
-        const data = await response.json();
-        setCourses(data.courses);
+        const response = await axios.get("/api/student/courses");
+        setCourses(response.data.courses);
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -136,15 +138,19 @@ export default function CoursesPage() {
                           className="flex items-center gap-1"
                         >
                           <BookOpen className="h-3 w-3" />
-                          {course.lessonCount} Lessons
+                          {course._count.lessons} Lessons
                         </Badge>
                         <Badge
                           variant="secondary"
                           className="flex items-center gap-1"
                         >
                           <Users className="h-3 w-3" />
-                          {course.studentCount} Students
+                          {course._count.enrollments} Students
                         </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Created{" "}
+                        {new Date(course.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   </CardContent>

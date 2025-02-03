@@ -25,6 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface Course {
   id: string;
@@ -52,6 +54,7 @@ interface Course {
 export default function CourseDetailPage() {
   const params = useParams();
   const { toast } = useToast();
+  const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,11 +69,10 @@ export default function CourseDetailPage() {
 
       setCheckingEnrollment(true);
       try {
-        const response = await fetch(
+        const response = await axios.get(
           `/api/courses/${params.id}/check-enrollment`
         );
-        const data = await response.json();
-        setIsEnrolled(data.isEnrolled);
+        setIsEnrolled(response.data.isEnrolled);
       } catch (error) {
         console.error("Failed to check enrollment:", error);
       } finally {
@@ -85,9 +87,8 @@ export default function CourseDetailPage() {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const response = await fetch(`/api/courses/${params.id}`);
-        const data = await response.json();
-        setCourse(data.course);
+        const response = await axios.get(`/api/courses/${params.id}`);
+        setCourse(response.data.course);
       } catch (error) {
         console.error("Error fetching course:", error);
         setError("Failed to fetch course");
@@ -108,12 +109,11 @@ export default function CourseDetailPage() {
     setEnrolling(true);
     try {
       // Double check enrollment before proceeding
-      const checkResponse = await fetch(
-        `/api/courses/${params.id}/check-enrollment`
+      const checkResponse = await axios.get(
+        `/api/student/courses/${params.id}/enroll`
       );
-      const checkData = await checkResponse.json();
 
-      if (checkData.isEnrolled) {
+      if (checkResponse.data.isEnrolled) {
         setIsEnrolled(true);
         toast({
           title: "Already Enrolled",
@@ -122,27 +122,24 @@ export default function CourseDetailPage() {
         return;
       }
 
-      const response = await fetch(`/api/courses/${params.id}/enroll`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Make POST request to enroll
+      const response = await axios.post(
+        `/api/student/courses/${params.id}/enroll`
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to enroll");
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Failed to enroll");
       }
 
       setIsEnrolled(true);
       toast({
         title: "Success",
-        description: "Successfully enrolled in the course",
+        description:
+          response.data.message || "Successfully enrolled in the course",
       });
 
       // Redirect to enrolled courses page
-      window.location.href = "/student/enrolled/success";
+      router.push("/student/enrolled/success");
     } catch (error) {
       console.error("Enrollment error:", error);
       toast({
@@ -282,25 +279,63 @@ export default function CourseDetailPage() {
                     <ScrollArea className="h-[400px] pr-4">
                       <div className="space-y-4">
                         {course.lessons.map((lesson) => (
-                          <Card key={lesson.id}>
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-lg">
-                                    {lesson.title}
-                                  </CardTitle>
-                                  <CardDescription>
-                                    {lesson.description}
-                                  </CardDescription>
-                                </div>
-                                {lesson.materialUrl && (
-                                  <Badge variant="outline">
-                                    Material Available
-                                  </Badge>
-                                )}
-                              </div>
-                            </CardHeader>
-                          </Card>
+                          <div key={lesson.id}>
+                            {isEnrolled ? (
+                              <Link
+                                href={`/student/courses/${params.id}/lessons/${lesson.id}`}
+                              >
+                                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                  <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <CardTitle className="text-lg">
+                                          {lesson.title}
+                                        </CardTitle>
+                                        <CardDescription>
+                                          {lesson.description}
+                                        </CardDescription>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {lesson.materialUrl && (
+                                          <Badge variant="outline">
+                                            Material Available
+                                          </Badge>
+                                        )}
+                                        <Badge>
+                                          Lesson {lesson.sequenceOrder}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </CardHeader>
+                                </Card>
+                              </Link>
+                            ) : (
+                              <Card className="opacity-75">
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <CardTitle className="text-lg">
+                                        {lesson.title}
+                                      </CardTitle>
+                                      <CardDescription>
+                                        {lesson.description}
+                                      </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {lesson.materialUrl && (
+                                        <Badge variant="outline">
+                                          Material Available
+                                        </Badge>
+                                      )}
+                                      <Badge variant="secondary">
+                                        Lesson {lesson.sequenceOrder}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                              </Card>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </ScrollArea>

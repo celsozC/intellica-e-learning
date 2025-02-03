@@ -2,6 +2,35 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { signJWT } from "@/lib/jwt";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+async function getCurrentUser() {
+  try {
+    const token = (await cookies()).get("token")?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(JWT_SECRET)
+    );
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id as string },
+      include: { role: true },
+    });
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -52,28 +81,52 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create token payload
+    // Update isActive to true immediately after successful login
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { isActive: true },
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Create token payload using the updated user
     const tokenData = {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-      isActive: user.isActive,
+      id: updatedUser.id,
+      email: updatedUser.email,
+      fullName: updatedUser.fullName,
+      role: updatedUser.role,
+      isActive: updatedUser.isActive,
     };
 
     console.log("Creating token with data:", tokenData);
 
     const token = await signJWT(tokenData);
 
-    // Create the response
+    // After successful login, before returning the response
+    // Log the login action
+    await prisma.systemLog.create({
+      data: {
+        userId: user.id,
+        action: "LOGIN",
+        details: `User logged in: ${user.email}`,
+      },
+    });
+
+    // Create the response using the updated user
     const response = NextResponse.json({
       user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        isActive: user.isActive,
-        profileImage: user.profileImage,
+        id: updatedUser.id,
+        email: updatedUser.email,
+        fullName: updatedUser.fullName,
+        role: updatedUser.role,
+        isActive: updatedUser.isActive,
+        profileImage: updatedUser.profileImage,
       },
     });
 
@@ -108,6 +161,39 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { error: "Failed to login. Please try again." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isActive: body.isActive,
+      },
+    });
+
+    return NextResponse.json({
+      message: "User updated successfully",
+      user: {
+        id: updatedUser.id,
+        isActive: updatedUser.isActive,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json(
+      { error: "Failed to update user" },
       { status: 500 }
     );
   }

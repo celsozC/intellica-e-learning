@@ -14,53 +14,75 @@ datasource db {
 }
 
 model Role {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String @unique
+  users User[]
 }
 
 model User {
-  id                String            @id @default(auto()) @map("_id") @db.ObjectId
-  fullName          String
-  email             String            @unique
-  password          String
-  isActive          Boolean           @default(true)
-  roleId            String?           @db.ObjectId
-  role              Role?             @relation(fields: [roleId], references: [id])
-  profileImage      String?           @default("/default-avatar.jpg")
-  courses           Course[]          // Courses taught by the user
-  discussions       Discussion[]      // Discussions created by the user
-  discussionReplies DiscussionReply[] // Replies created by the user
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  email           String    @unique
+  fullName        String
+  password        String
+  role            Role      @relation(fields: [roleId], references: [id])
+  roleId          String    @db.ObjectId
+  profileImage    String?   @default("/default-profile.jpg")
+  isActive        Boolean   @default(true)
+  adminDetails    Admin?    @relation("UserToAdmin")
+  teacherDetails  Teacher?  @relation("UserToTeacher")
+  studentDetails  Student?  @relation("UserToStudent")
+  discussions     Discussion[] @relation("UserToDiscussion")
+  discussionReplies DiscussionReply[] @relation("UserToDiscussionReply")
+  submissions     Submission[]  @relation("UserToSubmission")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  systemLogs      SystemLog[]
 
   @@index([roleId])
 }
 
 model Admin {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
-  email           String           @unique
-  systemSettings  SystemSettings[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName      String
+  user          User     @relation("UserToAdmin", fields: [userId], references: [id])
+  userId        String   @unique @db.ObjectId
+  systemSettings SystemSettings[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-model ActivityLog {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  actorType String
-  actorId   String
-  action    String
-  description String
-  createdAt DateTime @default(now())
+model Teacher {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName      String
+  user          User     @relation("UserToTeacher", fields: [userId], references: [id])
+  userId        String   @unique @db.ObjectId
+  specialization String
+  bio           String
+  gender        String
+  courses       Course[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Student {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName      String
+  user          User     @relation("UserToStudent", fields: [userId], references: [id])
+  userId        String   @unique @db.ObjectId
+  dateOfBirth   DateTime?
+  gender        String?
+  enrollments   CourseEnrollment[] @relation("StudentToCourseEnrollment")
+  quizAttempts  QuizAttempt[]
+  submissions   Submission[]  @relation("StudentToSubmission")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model SystemSettings {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  adminId   String   @db.ObjectId
   key       String
   value     String
+  adminId   String   @db.ObjectId
   admin     Admin    @relation(fields: [adminId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,166 +90,173 @@ model SystemSettings {
   @@index([adminId])
 }
 
-model Teacher {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  fullName  String
-  specialization String
-  bio String
-  gender String
+model Course {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  teacherId   String    @db.ObjectId
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  enrollments CourseEnrollment[]
+  lessons     Lesson[]
+  category    CourseCategory @relation(fields: [categoryId], references: [id])
+  status      String       @default("active")
+  categoryId  String         @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lessonCount Int      @default(0)
+  studentCount Int     @default(0)
+
+  @@index([categoryId])
+  @@index([teacherId])
+}
+
+model CourseCategory {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  description String
+  courses Course[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Student {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  fullName      String
-  dateOfBirth   DateTime
-  gender        String
-  enrollments   CourseEnrollment[]
-  quizAttempts  QuizAttempt[]    // Add this relation
-  submissions   Submission[]      // Add this relation
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Course {
-  id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  teacherId   String       @db.ObjectId
-  teacher     User         @relation(fields: [teacherId], references: [id])
-  discussions Discussion[]
-  enrollments CourseEnrollment[]
-  lessons     Lesson[]     // Add this relation
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  @@index([teacherId])
-}
-
 model CourseEnrollment {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  studentId       String   @db.ObjectId
-  courseId        String   @db.ObjectId
-  student         Student  @relation(fields: [studentId], references: [id])
-  course          Course   @relation(fields: [courseId], references: [id])
-  enrollmentDate  DateTime
-  status          String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId     String    @db.ObjectId
+  courseId      String    @db.ObjectId
+  student       Student   @relation("StudentToCourseEnrollment", fields: [studentId], references: [id])
+  course        Course    @relation(fields: [courseId], references: [id])
+  status        String    @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
+  progress      Int       @default(0)
+  lastAccessedAt DateTime @default(now())
+  enrollmentDate DateTime @default(now())
+  completedAt   DateTime?
 
   @@index([studentId])
   @@index([courseId])
-}
-
-model Discussion {
-  id          String            @id @default(auto()) @map("_id") @db.ObjectId
-  courseId    String            @db.ObjectId
-  course      Course            @relation(fields: [courseId], references: [id])
-  authorId    String            @db.ObjectId
-  author      User              @relation(fields: [authorId], references: [id])
-  title       String
-  content     String
-  replies     DiscussionReply[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  @@index([courseId])
-  @@index([authorId])
-}
-
-model DiscussionReply {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  discussionId String     @db.ObjectId
-  discussion   Discussion @relation(fields: [discussionId], references: [id])
-  authorId     String     @db.ObjectId
-  author       User       @relation(fields: [authorId], references: [id])
-  content      String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@index([discussionId])
-  @@index([authorId])
 }
 
 model Lesson {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  courseId      String   @db.ObjectId
-  course        Course   @relation(fields: [courseId], references: [id])
-  title         String
-  content       String
-  description   String
-  materialUrl   String
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  content     String
+  materialUrl String?
   sequenceOrder Int
-  quizzes       Quiz[]        // Add relation for quizzes
-  assignments   Assignment[]  // Add relation for assignments
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  courseId    String    @db.ObjectId
+  course      Course    @relation(fields: [courseId], references: [id])
+  assignments Assignment[]
+  submissions Submission[]
+  quiz        Quiz?
+  discussions Discussion[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([courseId])
 }
 
-model Quiz {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  lessonId    String        @db.ObjectId
-  lesson      Lesson        @relation(fields: [lessonId], references: [id])
-  title       String
-  description String
-  timeLimit   Int
-  maxScore    Int
-  attempts    QuizAttempt[]  // Add this relation
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@index([lessonId])
-}
-
-model QuizAttempt {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  quizId      String   @db.ObjectId
-  quiz        Quiz     @relation(fields: [quizId], references: [id])
-  studentId   String   @db.ObjectId
-  student     Student  @relation(fields: [studentId], references: [id])
-  score       Int
-  startedAt   DateTime
-  completedAt DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([quizId])
-  @@index([studentId])
-}
-
 model Assignment {
-  id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  lessonId    String       @db.ObjectId
-  lesson      Lesson       @relation(fields: [lessonId], references: [id])
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
-  maxScore    Int
   dueDate     DateTime
-  submissions Submission[]  // Add this relation
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  maxScore    Int
+  lessonId    String    @db.ObjectId
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  submissions Submission[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([lessonId])
 }
 
 model Submission {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  assignmentId  String     @db.ObjectId
-  assignment    Assignment @relation(fields: [assignmentId], references: [id])
-  studentId     String     @db.ObjectId
-  student       Student    @relation(fields: [studentId], references: [id])
-  content       String
-  attachmentUrl String
-  score         Int
-  feedback      String
-  submittedAt   DateTime
-  gradedAt      DateTime
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  fileUrl     String?
+  score       Float?
+  feedback    String?
+  status      String    // "PENDING", "GRADED"
+  userId      String    @db.ObjectId
+  user        User      @relation("UserToSubmission", fields: [userId], references: [id])
+  studentId   String    @db.ObjectId
+  student     Student   @relation("StudentToSubmission", fields: [studentId], references: [id])
+  assignmentId String   @db.ObjectId
+  assignment  Assignment @relation(fields: [assignmentId], references: [id])
+  lessonId    String    @db.ObjectId
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  @@index([assignmentId])
+  @@index([userId])
   @@index([studentId])
+  @@index([assignmentId])
+  @@index([lessonId])
+}
+
+model Quiz {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  timeLimit   Int?      // in minutes
+  maxScore    Int
+  lessonId    String    @unique @db.ObjectId
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  attempts    QuizAttempt[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model QuizAttempt {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  score       Float
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  answers     Json      // Store answers as JSON
+  studentId   String    @db.ObjectId
+  student     Student   @relation(fields: [studentId], references: [id])
+  quizId      String    @db.ObjectId
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([studentId])
+  @@index([quizId])
+}
+
+model Discussion {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  authorId    String    @db.ObjectId
+  author      User      @relation("UserToDiscussion", fields: [authorId], references: [id])
+  lessonId    String    @db.ObjectId
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  replies     DiscussionReply[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([lessonId])
+}
+
+model DiscussionReply {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  content       String
+  authorId      String    @db.ObjectId
+  author        User      @relation("UserToDiscussionReply", fields: [authorId], references: [id])
+  discussionId  String    @db.ObjectId
+  discussion    Discussion @relation(fields: [discussionId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([discussionId])
+}
+
+model SystemLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String
+  timestamp DateTime @default(now())
 }

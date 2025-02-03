@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type User = {
   id: string;
@@ -18,6 +18,7 @@ type User = {
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -65,7 +66,10 @@ export function useAuth() {
         credentials: "include",
       });
       setUser(null);
-      toast.success("Logged out successfully");
+      toast({
+        title: "Logged out successfully",
+        description: "You are now logged out",
+      });
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -83,6 +87,7 @@ export function useAuth() {
     user,
     loading,
     logout,
+    checkAuth,
     isAuthenticated: !!user,
   };
 }

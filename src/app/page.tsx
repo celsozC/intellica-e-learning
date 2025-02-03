@@ -1,100 +1,140 @@
+"use client";
+import { motion } from "framer-motion";
+
 export default function Home() {
   return (
-    <div className="min-h-screen pt-20 bg-white dark:bg-black">
-      {/* Hero Section with Dynamic Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,#ffffff,transparent)] dark:bg-[radial-gradient(circle_500px_at_50%_200px,#1a1a1a,transparent)]"></div>
+    <div className="min-h-screen bg-black overflow-hidden">
+      {/* Modern subtle patterns */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,#ffffff08,transparent)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_0%_300px,#ffffff08,transparent)]"></div>
 
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <div className="text-center">
-          <h1 className="text-6xl sm:text-8xl font-bold text-black dark:text-white mb-8 tracking-tight">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-block mb-4"
+          >
+            <span className="relative inline-flex items-center px-6 py-2 rounded-full bg-white/5 border border-white/10">
+              <span className="animate-pulse absolute -left-1 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-blue-500"></span>
+              <span className="text-sm font-medium text-white/80 pl-4">
+                Now Open for Student Applications 📚
+              </span>
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-6xl sm:text-8xl font-bold mb-8 tracking-tight text-white"
+          >
             Intel<span className="font-light">lica</span>
-          </h1>
-          <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto font-light">
-            Where knowledge meets innovation. Transform your learning journey
-            with our cutting-edge platform.
-          </p>
-          <div className="flex gap-6 justify-center items-center">
-            <a
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-xl sm:text-2xl text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
+          >
+            Connect with expert teachers, join interactive courses, and master
+            new skills through hands-on assignments.
+            <span className="block mt-2 text-white/50">
+              Your journey to excellence starts here.
+            </span>
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="flex gap-6 justify-center items-center flex-col sm:flex-row"
+          >
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               href="/courses"
-              className="group px-8 py-4 bg-black dark:bg-white text-white dark:text-black rounded-full hover:scale-105 transition-all duration-300 font-medium relative overflow-hidden"
+              className="group w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-medium relative overflow-hidden flex items-center justify-center gap-2"
             >
-              <span className="relative z-10">Explore Courses</span>
-              <div className="absolute inset-0 bg-gray-800 dark:bg-gray-200 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
-            </a>
-            <a
-              href="/trial"
-              className="group px-8 py-4 border-2 border-black dark:border-white text-black dark:text-white rounded-full hover:scale-105 transition-all duration-300 font-medium"
+              <span className="relative z-10">Browse Courses</span>
+              <motion.svg
+                className="w-4 h-4 relative z-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
+              </motion.svg>
+            </motion.a>
+
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              href="/register"
+              className="group w-full sm:w-auto px-8 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white"
             >
-              Start Free Trial
-            </a>
-          </div>
+              Register Now
+              <motion.span
+                className="inline-block"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                →
+              </motion.span>
+            </motion.a>
+          </motion.div>
         </div>
 
-        {/* Features Grid with Hover Effects */}
-        <div className="mt-32 pt-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.8 }}
+          className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto"
+        >
           {[
-            {
-              title: "Expert-Led Courses",
-              description: "Learn from industry leaders and innovators.",
-              icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
-            },
-            {
-              title: "Interactive Learning",
-              description: "Engage with real-world projects and challenges.",
-              icon: "M13 10V3L4 14h7v7l9-11h-7z",
-            },
-            {
-              title: "Certified Growth",
-              description: "Earn credentials that matter in the industry.",
-              icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-            },
-          ].map((feature, index) => (
-            <div
+            { number: "50+", label: "Expert Teachers" },
+            { number: "100+", label: "Interactive Courses" },
+            { number: "92%", label: "Completion Rate" },
+          ].map((stat, index) => (
+            <motion.div
               key={index}
-              className="group p-8 bg-gray-50 dark:bg-gray-900 rounded-2xl hover:scale-105 transition-all duration-300 cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              className="relative p-6 rounded-2xl bg-white/5 border border-white/10"
             >
-              <div className="w-14 h-14 mb-6 relative">
-                <div className="absolute inset-0 bg-black dark:bg-white rounded-xl transform -rotate-6 group-hover:rotate-0 transition-transform duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    className="w-7 h-7 text-white dark:text-black"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d={feature.icon}
-                    />
-                  </svg>
-                </div>
+              <div className="text-4xl font-bold text-white mb-2">
+                {stat.number}
               </div>
-              <h2 className="text-xl font-bold mb-3 text-black dark:text-white group-hover:translate-x-2 transition-transform duration-300">
-                {feature.title}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 group-hover:translate-x-2 transition-transform duration-300">
-                {feature.description}
-              </p>
-            </div>
+              <div className="text-white/60">{stat.label}</div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </main>
 
-      {/* Minimalist Footer */}
-      <footer className="relative border-t border-gray-200 dark:border-gray-800">
+      <footer className="relative border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex justify-between items-center flex-col sm:flex-row gap-6">
-            <div className="text-gray-600 dark:text-gray-400 font-light">
-              © 2024 Intellica. All rights reserved.
+            <div className="flex items-center gap-4">
+              <span className="text-2xl font-bold text-white">
+                Intel<span className="font-light">lica</span>
+              </span>
+              <span className="text-white/60 font-light">© 2024</span>
             </div>
             <div className="flex gap-8">
-              {["Privacy", "Terms", "Contact"].map((item, index) => (
+              {["Privacy", "Terms", "Contact", "Blog"].map((item, index) => (
                 <a
                   key={index}
                   href={`/${item.toLowerCase()}`}
-                  className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors duration-300 font-light"
+                  className="text-white/60 hover:text-white transition-colors duration-300 font-light"
                 >
                   {item}
                 </a>
