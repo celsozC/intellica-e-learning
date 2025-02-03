@@ -38,7 +38,7 @@ export async function GET() {
         include: {
           enrollments: {
             where: {
-              status: "ACTIVE",
+              status: "GRADED",
             },
             include: {
               course: {
@@ -100,7 +100,7 @@ export async function GET() {
             where: {
               studentId: student.id,
               lesson: { courseId: enrollment.courseId },
-              status: "APPROVED",
+              status: "GRADED",
             },
           });
 

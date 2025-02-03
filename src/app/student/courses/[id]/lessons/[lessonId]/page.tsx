@@ -24,6 +24,7 @@ import {
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 interface Lesson {
   id: string;
@@ -42,6 +43,8 @@ interface Submission {
   student: {
     fullName: string;
   };
+  feedback?: string;
+  score?: string;
 }
 
 export default function LessonPage() {
@@ -246,27 +249,94 @@ export default function LessonPage() {
                     Submitted on{" "}
                     {new Date(submission.createdAt).toLocaleString()}
                   </div>
-                  <Badge
-                    variant={
-                      submission.status === "PENDING" ? "secondary" : "success"
-                    }
-                  >
-                    {submission.status}
-                  </Badge>
-                </div>
-                {submission.fileUrl && (
-                  <Button asChild variant="outline">
-                    <a
-                      href={submission.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={
+                        submission.status === "PENDING"
+                          ? "secondary"
+                          : submission.status === "GRADED"
+                          ? "success"
+                          : "default"
+                      }
+                      className="capitalize"
                     >
-                      <FileText className="h-4 w-4" />
-                      View Submitted File
-                    </a>
-                  </Button>
-                )}
+                      {submission.status.toLowerCase()}
+                    </Badge>
+                    {submission.status === "GRADED" && (
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Score:
+                        </div>
+                        <Badge
+                          variant={
+                            Number(submission.score) >= 70
+                              ? "success"
+                              : Number(submission.score) >= 50
+                              ? "warning"
+                              : "destructive"
+                          }
+                          className="font-semibold"
+                        >
+                          {submission.score}/100
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* File Preview Section */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium">Submitted File:</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <a
+                        href={submission.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View File
+                      </a>
+                    </Button>
+                  </div>
+                  {submission.feedback && (
+                    <div className="mt-4 rounded-lg border bg-muted/50 p-4">
+                      <div className="text-sm font-medium mb-2">Feedback:</div>
+                      <div className="text-sm text-muted-foreground">
+                        {submission.feedback}
+                      </div>
+                    </div>
+                  )}
+                  {submission.fileUrl && (
+                    <div className="rounded-lg mt-4 border bg-muted/50 p-4">
+                      {submission.fileUrl.endsWith(".pdf") ? (
+                        <iframe
+                          src={submission.fileUrl}
+                          className="w-full h-[400px] rounded-md"
+                          title="PDF Preview"
+                        />
+                      ) : submission.fileUrl.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                        <Image
+                          src={submission.fileUrl}
+                          alt="Submission Preview"
+                          width={800}
+                          height={400}
+                          className="rounded-md object-contain w-full"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-20 text-muted-foreground">
+                          File preview not available
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

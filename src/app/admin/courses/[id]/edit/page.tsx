@@ -299,30 +299,6 @@ export default function EditCoursePage({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">
-                  Status
-                  <span className="text-sm text-muted-foreground ml-2">
-                    (Current: {course?.status})
-                  </span>
-                </Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSaving}>
                   {isSaving && (
