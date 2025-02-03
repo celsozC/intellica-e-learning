@@ -127,6 +127,7 @@ export default function EditCoursePage({
       });
       router.push(`/admin/courses/${courseId}`);
     } catch (error) {
+      console.error("Error updating course:", error);
       toast({
         title: "Error",
         description: "Failed to update course",
@@ -175,12 +176,7 @@ export default function EditCoursePage({
                 </h3>
                 <p className="mt-1">{course?.title}</p>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground">
-                  Status
-                </h3>
-                <p className="mt-1">{course?.status}</p>
-              </div>
+
               <div>
                 <h3 className="font-semibold text-sm text-muted-foreground">
                   Teacher
