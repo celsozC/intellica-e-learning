@@ -97,17 +97,17 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => router.push(`/${user.role.name}/profile/edit`)}
+                onClick={() => router.push(`/${user.role.name}/profile`)}
               >
                 Edit Profile
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => router.push(`/${user.role.name}/settings`)}
               >
                 Settings
-              </Button>
+              </Button> */}
               <Button variant="destructive" className="w-full" onClick={logout}>
                 Logout
               </Button>

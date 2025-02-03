@@ -37,6 +37,8 @@ interface EnrolledCourse {
   lastAccessed: string;
   status: string;
   enrollmentId: string;
+  approvedSubmissions: number;
+  totalSubmissions: number;
 }
 
 export default function EnrolledCoursesPage() {
@@ -217,9 +219,16 @@ export default function EnrolledCoursesPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Course Progress</span>
-                  <span className="font-medium">{course.progress}%</span>
+                  <span className="font-medium">
+                    {course.progress}% ({course.approvedSubmissions}/
+                    {course.lessonCount} completed)
+                  </span>
                 </div>
                 <Progress value={course.progress} className="h-2" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{course.approvedSubmissions} lessons completed</span>
+                  <span>{course.totalSubmissions} total submissions</span>
+                </div>
               </div>
 
               <div className="pt-4 border-t">

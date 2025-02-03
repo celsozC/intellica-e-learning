@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const token = await (await cookies()).get("token")?.value;
+    const token = (await cookies()).get("token")?.value;
 
     if (!token) {
       console.log("No token found");

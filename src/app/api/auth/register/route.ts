@@ -1,32 +1,34 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import { hash } from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
-    const { fullName, email, password } = await request.json();
+    const body = await request.json();
+    const { fullName, email, password } = body;
 
+    // Validate required fields
     if (!fullName || !email || !password) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Check if user already exists
+    // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email already registered" },
+        { error: "Email already exists" },
         { status: 400 }
       );
     }
 
     // Get the student role
-    const studentRole = await prisma.role.findUnique({
+    const studentRole = await prisma.role.findFirst({
       where: { name: "student" },
     });
 
@@ -38,59 +40,72 @@ export async function POST(request: Request) {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 12);
 
-    // Create both User and Student records in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create the user
-      const user = await tx.user.create({
-        data: {
-          fullName,
-          email,
-          password: hashedPassword,
-          isActive: true,
-          role: {
-            connect: {
-              name: "student",
-            },
+    try {
+      // Create user with student details using transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Create user
+        const user = await tx.user.create({
+          data: {
+            fullName,
+            email,
+            password: hashedPassword,
+            roleId: studentRole.id,
+            isActive: true,
           },
-        },
-        include: {
-          role: true,
-        },
+          include: {
+            role: true,
+          },
+        });
+
+        // Create student details
+        const student = await tx.student.create({
+          data: {
+            fullName,
+            userId: user.id,
+          },
+        });
+
+        // Log the registration
+        await prisma.systemLog.create({
+          data: {
+            userId: user.id,
+            action: "REGISTER",
+            details: `New user registered: ${user.email}`,
+          },
+        });
+
+        return {
+          ...user,
+          studentDetails: student,
+        };
       });
 
-      // Create the student with minimal required data
-      const student = await tx.student.create({
-        data: {
-          fullName,
-          dateOfBirth: new Date(), // Default value, can be updated later
-          gender: "Unspecified", // Default value, can be updated later
-          profileImage: "/default-avatar.jpg", // Default value, can be updated later
-        },
+      // Remove sensitive data from response
+      const { password: _, ...userWithoutPassword } = result;
+
+      return NextResponse.json({
+        success: true,
+        user: userWithoutPassword,
       });
-
-      return { user, student };
-    });
-
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = result.user;
-
-    return NextResponse.json({
-      message: "Registration successful",
-      user: userWithoutPassword,
-      student: result.student,
-    });
-  } catch (error: unknown) {
-    console.error("Registration error:", {
-      name: error instanceof Error ? error.name : "Unknown error",
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
+    } catch (error) {
+      console.error("Transaction error:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to create user account",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Failed to register user" },
+      {
+        error: "Failed to process registration",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

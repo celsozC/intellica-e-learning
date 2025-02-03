@@ -9,12 +9,15 @@ import {
   LogOut,
   Settings,
   User,
+  Loader2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/auth-store";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,13 +27,37 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
+  const { user, setUser, logout } = useAuthStore();
   const { setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
-  const { user, loading, logout } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Function to fetch user data
+  const fetchUser = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get("/api/auth/me");
+      if (response.data.user) {
+        setUser(response.data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check auth on mount and route changes
+  useEffect(() => {
+    fetchUser();
+  }, [pathname]); // Re-run when pathname changes
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,6 +67,45 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <nav
+        className={`fixed top-0 left-0 right-0 border-b bg-background/75 backdrop-blur-sm transition-all duration-200 z-50 ${
+          scrolled ? "h-14" : "h-16"
+        }`}
+      >
+        <div
+          className={`flex items-center justify-between px-4 container mx-auto h-full transition-all duration-200`}
+        >
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="relative h-8 w-8">
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                fill
+                className="object-contain border border-zinc-800 invert dark:invert-0 rounded-md"
+                priority
+              />
+            </div>
+          </Link>
+          <Button variant="ghost" disabled>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Loading...
+          </Button>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav
@@ -63,9 +129,7 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-2">
-          {loading ? (
-            "Loading..."
-          ) : user ? (
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -82,21 +146,29 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/${user.role.name.toLowerCase()}`)
+                  }
+                >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+
+                {user.role.name !== "admin" && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(`/${user.role.name.toLowerCase()}/profile`)
+                      }
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuItem
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="text-red-600 focus:text-red-600"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
