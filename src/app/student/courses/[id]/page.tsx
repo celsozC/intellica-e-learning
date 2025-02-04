@@ -21,6 +21,7 @@ import {
   FileText,
   MessageSquare,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -237,6 +238,7 @@ export default function CourseDetailPage() {
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="lessons">Lessons</TabsTrigger>
+                <TabsTrigger value="discussions">Discussions</TabsTrigger>
                 <TabsTrigger value="instructor">Instructor</TabsTrigger>
               </TabsList>
 
@@ -335,6 +337,63 @@ export default function CourseDetailPage() {
                                 </CardHeader>
                               </Card>
                             )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="discussions">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Lesson Discussions</CardTitle>
+                    <CardDescription>
+                      Join the conversation about each lesson
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {course.lessons.map((lesson) => (
+                          <div key={lesson.id}>
+                            <Card className="hover:shadow-lg transition-shadow">
+                              <CardHeader>
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <CardTitle className="text-lg">
+                                      {lesson.title}
+                                    </CardTitle>
+                                    <CardDescription>
+                                      {lesson.description}
+                                    </CardDescription>
+                                  </div>
+                                  {isEnrolled ? (
+                                    <Link
+                                      href={`/student/courses/${params.id}/lessons/${lesson.id}/discussions`}
+                                    >
+                                      <Button
+                                        variant="outline"
+                                        className="flex items-center gap-2"
+                                      >
+                                        <MessageSquare className="h-4 w-4" />
+                                        View Discussions
+                                      </Button>
+                                    </Link>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      disabled
+                                      className="flex items-center gap-2 opacity-50"
+                                    >
+                                      <Lock className="h-4 w-4" />
+                                      Enroll to View
+                                    </Button>
+                                  )}
+                                </div>
+                              </CardHeader>
+                            </Card>
                           </div>
                         ))}
                       </div>
