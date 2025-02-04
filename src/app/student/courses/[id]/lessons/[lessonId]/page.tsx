@@ -93,15 +93,15 @@ export default function LessonPage() {
               `/api/student/courses/${params.id}/lessons/${params.lessonId}/submissions`
             ),
             axios.get(
-              `/api/student/courses/${params.courseId}/lessons/${params.lessonId}/discussions/fetchData`
+              `/api/student/courses/${params.id}/lessons/${params.lessonId}/discussions/fetchData`
             ),
           ]);
 
         setLesson(lessonResponse.data.lesson);
+        setDiscussions(discussionResponse.data.lesson.discussions);
         setNextLesson(lessonResponse.data.nextLesson?.id || null);
         setPrevLesson(lessonResponse.data.prevLesson?.id || null);
         setSubmission(submissionResponse.data.submission);
-        setDiscussions(discussionResponse.data.lesson.discussions || []);
       } catch (error: any) {
         console.error("Error fetching data:", error);
         toast({

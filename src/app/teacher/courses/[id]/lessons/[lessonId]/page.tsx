@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,8 +24,10 @@ import {
   File,
   BookOpen,
   User,
+  MessageSquare,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 interface Submission {
   _id: string;
@@ -33,6 +41,34 @@ interface Submission {
   submittedAt: string;
 }
 
+interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  materialUrl: string | null;
+  sequenceOrder: number;
+  discussions: Discussion[];
+}
+
+interface Discussion {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  author: {
+    fullName: string;
+  };
+  replies: {
+    id: string;
+    content: string;
+    createdAt: string;
+    author: {
+      fullName: string;
+    };
+  }[];
+}
+
 interface CourseInfo {
   courseName: string;
   lessonName: string;
@@ -44,6 +80,7 @@ export default function LessonSubmissionsPage() {
   const { toast } = useToast();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentFeedback, setCurrentFeedback] = useState<string>("");
   const [currentScore, setCurrentScore] = useState<number | null>(null);
@@ -53,8 +90,36 @@ export default function LessonSubmissionsPage() {
   );
 
   useEffect(() => {
-    Promise.all([fetchSubmissions(), fetchCourseInfo()]);
-  }, []);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        await Promise.all([
+          fetchSubmissions(),
+          fetchCourseInfo(),
+          fetchDiscussions(),
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load lesson data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [params.courseId, params.lessonId]);
+
+  const fetchDiscussions = async () => {
+    const response = await axios.get(
+      `/api/teacher/course/${params.id}/lessons/${params.lessonId}/discussions/fetchData`
+    );
+    console.log("Fetched discussions:", response.data);
+    setLesson(response.data);
+  };
 
   const fetchSubmissions = async () => {
     try {
@@ -62,6 +127,7 @@ export default function LessonSubmissionsPage() {
       const response = await axios.get(
         `/api/teacher/course/${params.id}/lessons/${params.lessonId}/submissions`
       );
+
       console.log("Fetched submissions:", response.data);
       console.log("CELSOGOD: " + response.data.submissions);
       setSubmissions(response.data.submissions);
@@ -341,6 +407,25 @@ export default function LessonSubmissionsPage() {
             </div>
           )}
         </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Student Discussions</CardTitle>
+            <CardDescription>
+              Recent discussions and questions from students
+            </CardDescription>
+          </div>
+          <Link
+            href={`/teacher/courses/${params.id}/lessons/${params.lessonId}/discussions`}
+          >
+            <Button variant="outline" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              View All
+            </Button>
+          </Link>
+        </CardHeader>
       </Card>
     </div>
   );
