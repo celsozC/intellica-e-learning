@@ -90,6 +90,19 @@ export default function LessonDiscussions({
     }
   };
 
+  const handleKeyDown = async (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    discussionId: string
+  ) => {
+    // Submit on Enter, Shift+Enter for new line
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (replyContent.trim()) {
+        await handleReply(discussionId);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -109,7 +122,7 @@ export default function LessonDiscussions({
   const discussions = lesson.discussions || [];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pt-20">
+    <div className="min-h-screen bg-white dark:bg-[#111] pt-20">
       <div className="absolute inset-0" />
 
       <div className="relative max-w-4xl mx-auto p-6">
@@ -199,27 +212,33 @@ export default function LessonDiscussions({
                         {replyingTo === discussion.id ? (
                           <div className="space-y-4">
                             <Textarea
-                              placeholder="Write your reply..."
+                              placeholder="Write your reply... (Press Enter to submit, Shift + Enter for new line)"
                               value={replyContent}
                               onChange={(e) => setReplyContent(e.target.value)}
+                              onKeyDown={(e) => handleKeyDown(e, discussion.id)}
                               className="w-full min-h-[100px] bg-transparent"
                             />
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => handleReply(discussion.id)}
-                                disabled={!replyContent.trim()}
-                              >
-                                Post Reply
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setReplyingTo(null);
-                                  setReplyContent("");
-                                }}
-                              >
-                                Cancel
-                              </Button>
+                            <div className="flex items-center justify-between">
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handleReply(discussion.id)}
+                                  disabled={!replyContent.trim()}
+                                >
+                                  Post Reply
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setReplyingTo(null);
+                                    setReplyContent("");
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                Press Shift + Enter for new line
+                              </span>
                             </div>
                           </div>
                         ) : (
