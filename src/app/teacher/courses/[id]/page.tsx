@@ -2,12 +2,24 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Calendar, Users, BookOpen, Plus } from "lucide-react";
+import {
+  Loader2,
+  User,
+  Calendar,
+  Users,
+  BookOpen,
+  Plus,
+  FileText,
+  ChevronRight,
+  MessageSquare,
+  Layout,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
 interface Course {
   id: string;
@@ -27,6 +39,7 @@ interface Course {
     title: string;
     description: string;
     order: number;
+    position?: number;
   }>;
   students: Array<{
     id: string;
@@ -166,6 +179,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           <TabsList className="grid w-full grid-cols-6 lg:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="lessons">Lessons</TabsTrigger>
+            <TabsTrigger value="assignment">Assignment</TabsTrigger>
+            <TabsTrigger value="discussions">Discussions</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
           </TabsList>
 
@@ -203,9 +218,20 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
           <TabsContent value="lessons" className="mt-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Course Lessons</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between border-b pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Course Lessons</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Manage your course content
+                    </p>
+                  </div>
+                </div>
                 <Button
+                  className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                   onClick={() =>
                     router.push(`/teacher/courses/${course.id}/lessons/create`)
                   }
@@ -214,37 +240,229 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   Add Lesson
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {course.lessons?.length ? (
                   <div className="space-y-4">
                     {course.lessons.map((lesson) => (
-                      <div
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         key={lesson.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="group flex items-center justify-between p-5 border rounded-xl bg-card hover:bg-accent/50 transition-all hover:shadow-md"
                       >
-                        <div>
-                          <h3 className="font-medium">{lesson.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {lesson.description}
-                          </p>
+                        <div className="flex items-center space-x-4">
+                          <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                            <Layout className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg group-hover:text-primary transition-colors">
+                              {lesson.title}
+                            </h3>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <p className="text-sm text-muted-foreground">
+                                {lesson.description}
+                              </p>
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                Lesson {lesson.position || ""}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         <Button
-                          variant="outline"
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() =>
                             router.push(
                               `/teacher/courses/${course.id}/lessons/${lesson.id}`
                             )
                           }
                         >
-                          View
+                          <span className="mr-2">View Lesson</span>
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    No lessons created yet
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <BookOpen className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium text-muted-foreground">
+                      No lessons created yet
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Start adding lessons to your course
+                    </p>
+                    <Button
+                      className="mt-4 bg-primary/10 text-primary hover:bg-primary/20"
+                      onClick={() =>
+                        router.push(
+                          `/teacher/courses/${course.id}/lessons/create`
+                        )
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Lesson
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="assignment" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between border-b pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Course Assignment</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Manage your course assignments
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
+                  onClick={() =>
+                    router.push(
+                      `/teacher/courses/${course.id}/assignment/create`
+                    )
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Assignment
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {course.lessons?.length ? (
+                  <div className="space-y-4">
+                    {course.lessons.map((lesson) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        key={lesson.id}
+                        className="group flex items-center justify-between p-5 border rounded-xl bg-card hover:bg-accent/50 transition-all hover:shadow-md"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                            <FileText className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg group-hover:text-primary transition-colors">
+                              {lesson.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {lesson.description}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() =>
+                            router.push(
+                              `/teacher/courses/${course.id}/lessons/${lesson.id}`
+                            )
+                          }
+                        >
+                          <span className="mr-2">View Details</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <FileText className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium text-muted-foreground">
+                      No assignments created yet
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Create your first assignment to get started
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="discussions" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between border-b pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Course Discussions</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Engage with your students
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {course.lessons?.length ? (
+                  <div className="space-y-4">
+                    {course.lessons.map((lesson) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        key={lesson.id}
+                        className="group flex items-center justify-between p-5 border rounded-xl bg-card hover:bg-accent/50 transition-all hover:shadow-md"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="h-12 w-12 rounded-lg bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                            <MessageSquare className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg group-hover:text-primary transition-colors">
+                              {lesson.title}
+                            </h3>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <p className="text-sm text-muted-foreground">
+                                {lesson.description}
+                              </p>
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                0 replies
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() =>
+                            router.push(
+                              `/teacher/courses/${course.id}/lessons/${lesson.id}/discussions`
+                            )
+                          }
+                        >
+                          <span className="mr-2">Join Discussion</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <MessageSquare className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium text-muted-foreground">
+                      No discussions started yet
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Discussions will appear here when students engage with
+                      lessons
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>

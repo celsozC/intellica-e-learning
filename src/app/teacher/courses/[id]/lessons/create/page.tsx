@@ -50,7 +50,7 @@ export default function CreateLessonPage() {
       });
 
       // Redirect to the lesson details page
-      router.push(`/teacher/courses/${params.id}/lessons/${data.lesson.id}`);
+      router.push(`/teacher/courses/${params.id}/`);
     } catch (error) {
       console.error("Error creating lesson:", error);
       toast({
