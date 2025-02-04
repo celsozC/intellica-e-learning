@@ -20,11 +20,31 @@ import {
   Upload,
   X,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import Link from "next/link";
+
+interface Discussion {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  author: {
+    fullName: string;
+  };
+  replies: {
+    id: string;
+    content: string;
+    createdAt: string;
+    author: {
+      fullName: string;
+    };
+  }[];
+}
 
 interface Lesson {
   id: string;
@@ -33,6 +53,7 @@ interface Lesson {
   content: string;
   materialUrl: string | null;
   sequenceOrder: number;
+  discussions: Discussion[];
 }
 
 interface Submission {
@@ -52,6 +73,7 @@ export default function LessonPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [loading, setLoading] = useState(true);
   const [nextLesson, setNextLesson] = useState<string | null>(null);
   const [prevLesson, setPrevLesson] = useState<string | null>(null);
@@ -62,19 +84,24 @@ export default function LessonPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [lessonResponse, submissionResponse] = await Promise.all([
-          axios.get(
-            `/api/student/courses/${params.id}/lessons/${params.lessonId}`
-          ),
-          axios.get(
-            `/api/student/courses/${params.id}/lessons/${params.lessonId}/submissions`
-          ),
-        ]);
+        const [lessonResponse, submissionResponse, discussionResponse] =
+          await Promise.all([
+            axios.get(
+              `/api/student/courses/${params.id}/lessons/${params.lessonId}`
+            ),
+            axios.get(
+              `/api/student/courses/${params.id}/lessons/${params.lessonId}/submissions`
+            ),
+            axios.get(
+              `/api/student/courses/${params.courseId}/lessons/${params.lessonId}/discussions/fetchData`
+            ),
+          ]);
 
         setLesson(lessonResponse.data.lesson);
         setNextLesson(lessonResponse.data.nextLesson?.id || null);
         setPrevLesson(lessonResponse.data.prevLesson?.id || null);
         setSubmission(submissionResponse.data.submission);
+        setDiscussions(discussionResponse.data.lesson.discussions || []);
       } catch (error: any) {
         console.error("Error fetching data:", error);
         toast({
@@ -233,6 +260,79 @@ export default function LessonPage() {
                 <p key={index}>{paragraph}</p>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Discussions Preview Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Discussions</CardTitle>
+              <CardDescription>
+                Join the conversation about this lesson
+              </CardDescription>
+            </div>
+            <Link
+              href={`/student/courses/${params.id}/lessons/${params.lessonId}/discussions`}
+            >
+              <Button variant="outline" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                View All Discussions ({discussions.length})
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {discussions.length > 0 ? (
+              <div className="space-y-4">
+                {discussions.slice(0, 3).map((discussion) => (
+                  <Link
+                    key={discussion.id}
+                    href={`/student/courses/${params.id}/lessons/${params.lessonId}/discussions`}
+                    className="block hover:bg-muted/60 transition-colors"
+                  >
+                    <div className="p-4 rounded-lg border bg-muted/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-base">
+                          {discussion.title}
+                        </h4>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(discussion.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {discussion.content}
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{discussion.replies.length} replies</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>by</span>
+                          <span className="font-medium text-primary">
+                            {discussion.author.fullName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                {discussions.length > 3 && (
+                  <div className="text-center p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground">
+                      +{discussions.length - 3} more discussions available
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 border rounded-lg bg-muted/30">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  No discussions yet for this lesson
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

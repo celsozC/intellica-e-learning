@@ -75,7 +75,7 @@ export default function RegisterPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
+      className="flex min-h-svh flex-col items-center justify-center bg-black/35 p-6 md:p-10"
     >
       <div className="w-full pt-14 max-w-sm md:max-w-3xl">
         <motion.div
