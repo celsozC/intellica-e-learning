@@ -235,16 +235,26 @@ export default function LessonSubmissionsPage() {
     <div className="container pt-24 mx-auto py-10 px-4 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div className="space-y-1">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center gap-2 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Lesson
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Lesson
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/teacher/courses/${params.id}`)}
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Back to Course
+            </Button>
+          </div>
           {courseInfo && (
-            <div className="space-y-1">
+            <div className="space-y-1 pt-6">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <BookOpen className="h-4 w-4" />
                 <span className="font-medium">{courseInfo.courseName}</span>
@@ -263,7 +273,7 @@ export default function LessonSubmissionsPage() {
         <CardHeader className="bg-muted/50">
           <CardTitle className="text-xl flex items-center gap-2">
             <FileCheck className="h-5 w-5" />
-            Student Submissions
+            Student Assignment Submissions
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">

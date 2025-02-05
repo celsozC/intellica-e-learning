@@ -22,6 +22,7 @@ import {
   MessageSquare,
   CheckCircle2,
   Lock,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -46,10 +47,33 @@ interface Course {
     content: string;
     materialUrl: string | null;
     sequenceOrder: number;
+    quizzes?: { id: string }[];
+    exams?: { id: string }[];
   }[];
   lessonCount: number;
   studentCount: number;
   createdAt: string;
+}
+
+interface AssessmentCount {
+  id: string;
+  title: string;
+  sequenceOrder: number;
+  quizCount: number;
+  examCount: number;
+  totalAssessments: number;
+  quizzes: Array<{
+    id: string;
+    title: string;
+    timeLimit: number;
+    maxScore: number;
+  }>;
+  exams: Array<{
+    id: string;
+    title: string;
+    timeLimit: number;
+    maxScore: number;
+  }>;
 }
 
 export default function CourseDetailPage() {
@@ -62,6 +86,7 @@ export default function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [assessmentCounts, setAssessmentCounts] = useState<AssessmentCount[]>([]);
 
   // Check enrollment status
   useEffect(() => {
@@ -100,6 +125,22 @@ export default function CourseDetailPage() {
 
     if (params.id) {
       fetchCourse();
+    }
+  }, [params.id]);
+
+  // Fetch assessment counts
+  useEffect(() => {
+    const fetchAssessmentCounts = async () => {
+      try {
+        const response = await axios.get(`/api/student/courses/${params.id}/lessons/assessmentCount`);
+        setAssessmentCounts(response.data);
+      } catch (error) {
+        console.error("Failed to fetch assessment counts:", error);
+      }
+    };
+
+    if (params.id) {
+      fetchAssessmentCounts();
     }
   }, [params.id]);
 
@@ -238,6 +279,7 @@ export default function CourseDetailPage() {
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="lessons">Lessons</TabsTrigger>
+                <TabsTrigger value="assessments">Assessments</TabsTrigger>
                 <TabsTrigger value="discussions">Discussions</TabsTrigger>
                 <TabsTrigger value="instructor">Instructor</TabsTrigger>
               </TabsList>
@@ -338,6 +380,79 @@ export default function CourseDetailPage() {
                               </Card>
                             )}
                           </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="assessments">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Course Assessments</CardTitle>
+                    <CardDescription>
+                      Overview of quizzes and exams for each lesson
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-4">
+                        {assessmentCounts.map((lesson) => (
+                          <Card key={lesson.id} className="hover:shadow-md transition-shadow">
+                            <CardHeader>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <CardTitle className="text-lg">
+                                    Lesson {lesson.sequenceOrder}: {lesson.title}
+                                  </CardTitle>
+                                  <div className="flex flex-col gap-2 mt-2">
+                                    {lesson.quizzes.length > 0 && (
+                                      <div className="text-sm text-muted-foreground">
+                                        Quizzes: {lesson.quizzes.map(quiz => quiz.title).join(", ")}
+                                      </div>
+                                    )}
+                                    {lesson.exams.length > 0 && (
+                                      <div className="text-sm text-muted-foreground">
+                                        Exams: {lesson.exams.map(exam => exam.title).join(", ")}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                {isEnrolled ? (
+                                  <Link href={`/student/courses/${params.id}/lessons/${lesson.id}/quizexam`}>
+                                    <Button variant="outline" className="flex items-center gap-2">
+                                      <FileCheck className="h-4 w-4" />
+                                      View Assessments
+                                    </Button>
+                                  </Link>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    disabled
+                                    className="flex items-center gap-2 opacity-50"
+                                  >
+                                    <Lock className="h-4 w-4" />
+                                    Enroll to View
+                                  </Button>
+                                )}
+                              </div>
+                              <div className="flex gap-4 mt-4">
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                  <FileCheck className="h-4 w-4" />
+                                  {lesson.quizCount} {lesson.quizCount === 1 ? 'Quiz' : 'Quizzes'}
+                                </Badge>
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                  <FileCheck className="h-4 w-4" />
+                                  {lesson.examCount} {lesson.examCount === 1 ? 'Exam' : 'Exams'}
+                                </Badge>
+                                <Badge className="flex items-center gap-1">
+                                  <FileCheck className="h-4 w-4" />
+                                  {lesson.totalAssessments} Total
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                          </Card>
                         ))}
                       </div>
                     </ScrollArea>
