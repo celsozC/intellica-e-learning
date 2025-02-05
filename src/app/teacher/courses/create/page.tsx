@@ -119,7 +119,7 @@ export default function TeacherCreateCoursePage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/teacher/courses/create", {
+      const response = await fetch("/api/teacher/course/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

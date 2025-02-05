@@ -73,6 +73,7 @@ model Student {
   gender        String?
   enrollments   CourseEnrollment[] @relation("StudentToCourseEnrollment")
   quizAttempts  QuizAttempt[]
+  examAttempts  ExamAttempt[]
   submissions   Submission[]  @relation("StudentToSubmission")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -146,7 +147,8 @@ model Lesson {
   course      Course    @relation(fields: [courseId], references: [id])
   assignments Assignment[]
   submissions Submission[]
-  quiz        Quiz?
+  quizzes     Quiz[]
+  exams       Exam[]
   discussions Discussion[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -198,11 +200,14 @@ model Quiz {
   description String
   timeLimit   Int?      // in minutes
   maxScore    Int
-  lessonId    String    @unique @db.ObjectId
+  questions   Json      // Array of questions with correct answers
+  lessonId    String    @db.ObjectId  // Removed @unique to allow multiple quizzes
   lesson      Lesson    @relation(fields: [lessonId], references: [id])
   attempts    QuizAttempt[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([lessonId])  // Add an index for better query performance
 }
 
 model QuizAttempt {
@@ -210,7 +215,7 @@ model QuizAttempt {
   score       Float
   startedAt   DateTime  @default(now())
   completedAt DateTime?
-  answers     Json      // Store answers as JSON
+  answers     Json      // Student answers with correctness validation
   studentId   String    @db.ObjectId
   student     Student   @relation(fields: [studentId], references: [id])
   quizId      String    @db.ObjectId
@@ -220,6 +225,37 @@ model QuizAttempt {
 
   @@index([studentId])
   @@index([quizId])
+}
+
+model Exam {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  timeLimit   Int?      // in minutes
+  maxScore    Int
+  questions   Json      // Array of questions with correct answers
+  lessonId    String    @db.ObjectId
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  attempts    ExamAttempt[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ExamAttempt {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  score       Float
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  answers     Json      // Student answers with correctness validation
+  studentId   String    @db.ObjectId
+  student     Student   @relation(fields: [studentId], references: [id])
+  examId      String    @db.ObjectId
+  exam        Exam      @relation(fields: [examId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([studentId])
+  @@index([examId])
 }
 
 model Discussion {

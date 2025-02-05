@@ -178,8 +178,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         <Tabs defaultValue="overview" className="mt-8">
           <TabsList className="grid w-full grid-cols-6 lg:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="lessons">Lessons</TabsTrigger>
-            <TabsTrigger value="assignment">Assignment</TabsTrigger>
+            <TabsTrigger value="lessons">Lessons / Assignments</TabsTrigger>
+            <TabsTrigger value="assignment">Quizzes / Exams</TabsTrigger>
             <TabsTrigger value="discussions">Discussions</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
           </TabsList>
@@ -224,7 +224,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Course Lessons</CardTitle>
+                    <CardTitle>Course Lessons / Assignments</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Manage your course content
                     </p>
@@ -237,7 +237,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   }
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Lesson
+                  Add Lesson and Assignment
                 </Button>
               </CardHeader>
               <CardContent className="pt-6">
@@ -263,7 +263,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                                 {lesson.description}
                               </p>
                               <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                                Lesson {lesson.position || ""}
+                                Lesson / Assignment {lesson.position || ""}
                               </span>
                             </div>
                           </div>
@@ -277,7 +277,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                             )
                           }
                         >
-                          <span className="mr-2">View Lesson</span>
+                          <span className="mr-2">View Lesson / Assignment</span>
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </motion.div>
@@ -319,23 +319,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     <FileText className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Course Assignment</CardTitle>
+                    <CardTitle>Lessons Quizzes / Exams</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Manage your course assignments
+                      Manage quizzes and exams for each lesson
                     </p>
                   </div>
                 </div>
-                <Button
-                  className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
-                  onClick={() =>
-                    router.push(
-                      `/teacher/courses/${course.id}/assignment/create`
-                    )
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Assignment
-                </Button>
               </CardHeader>
               <CardContent className="pt-6">
                 {course.lessons?.length ? (
@@ -355,9 +344,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                             <h3 className="font-medium text-lg group-hover:text-primary transition-colors">
                               {lesson.title}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {lesson.description}
-                            </p>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <p className="text-sm text-muted-foreground">
+                                {lesson.description}
+                              </p>
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                Lesson {lesson.position || ""}
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <Button
@@ -365,11 +359,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() =>
                             router.push(
-                              `/teacher/courses/${course.id}/lessons/${lesson.id}`
+                              `/teacher/courses/${course.id}/lessons/${lesson.id}/quizexam`
                             )
                           }
                         >
-                          <span className="mr-2">View Details</span>
+                          <span className="mr-2">Manage Quizzes & Exams</span>
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </motion.div>
@@ -381,11 +375,20 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       <FileText className="h-8 w-8 text-primary" />
                     </div>
                     <p className="text-lg font-medium text-muted-foreground">
-                      No assignments created yet
+                      No lessons available
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Create your first assignment to get started
+                      Create lessons first to add quizzes and exams
                     </p>
+                    <Button
+                      className="mt-4 bg-primary/10 text-primary hover:bg-primary/20"
+                      onClick={() =>
+                        router.push(`/teacher/courses/${course.id}/lessons/create`)
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Lesson
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -429,9 +432,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                               <p className="text-sm text-muted-foreground">
                                 {lesson.description}
                               </p>
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                                0 replies
-                              </span>
+                             
                             </div>
                           </div>
                         </div>

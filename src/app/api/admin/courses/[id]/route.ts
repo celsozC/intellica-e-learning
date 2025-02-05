@@ -7,39 +7,34 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log("Received params:", params);
+
+  if (!params?.id) {
+    console.error("No course ID provided");
+    return NextResponse.json(
+      { error: "Course ID is required" },
+      { status: 400 }
+    );
+  }
+
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token");
-
-    if (!token?.value) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const payload = await verifyJWT(token.value);
-
-    if (!payload?.id) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
-
-    // Verify admin role
-    const user = await prisma.user.findUnique({
-      where: { id: payload.id },
-      include: { role: true },
-    });
-
-    if (!user || user.role.name !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const { id } = params;
-    console.log("Looking for course with ID:", id);
+    console.log("1. Starting GET request for course ID:", params.id);
 
     const course = await prisma.course.findUnique({
       where: {
-        id: id,
+        id: params.id
       },
       include: {
-        teacher: true,
+        teacher: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                fullName: true,
+              }
+            }
+          }
+        },
         category: true,
         enrollments: {
           include: {
@@ -57,48 +52,81 @@ export async function GET(
         },
         lessons: {
           orderBy: {
-            sequenceOrder: "asc",
+            sequenceOrder: 'asc',
           },
           include: {
-            quiz: true,
             assignments: true,
+            quizzes: true,
+            exams: true,
             discussions: {
               include: {
-                author: {
-                  select: {
-                    fullName: true,
-                  },
-                },
+                author: true,
                 replies: {
                   include: {
-                    author: {
-                      select: {
-                        fullName: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+                    author: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
+    console.log("2. Course query completed");
+    console.log("3. Course found:", !!course);
+
     if (!course) {
+      console.log("4. Course not found, returning 404");
       return NextResponse.json(
-        { error: "Course not found", requestedId: id },
+        { error: "Course not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(course);
+    console.log("5. Calculating statistics");
+    const statistics = {
+      totalStudents: course.enrollments.length,
+      totalLessons: course.lessons.length,
+      totalAssignments: course.lessons.reduce(
+        (sum, lesson) => sum + lesson.assignments.length, 
+        0
+      ),
+      totalDiscussions: course.lessons.reduce(
+        (sum, lesson) => sum + lesson.discussions.length, 
+        0
+      ),
+      totalQuizzes: course.lessons.reduce(
+        (sum, lesson) => sum + lesson.quizzes.length, 
+        0
+      ),
+      totalExams: course.lessons.reduce(
+        (sum, lesson) => sum + lesson.exams.length, 
+        0
+      )
+    };
+
+    console.log("6. Statistics calculated:", statistics);
+
+    const responseData = {
+      ...course,
+      statistics
+    };
+
+    console.log("7. Sending successful response");
+    return NextResponse.json(responseData);
+
   } catch (error) {
-    console.error("Error fetching course:", error);
+    console.error("ERROR in course fetch:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      params
+    });
+
     return NextResponse.json(
-      {
+      { 
         error: "Failed to fetch course",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 500 }
     );

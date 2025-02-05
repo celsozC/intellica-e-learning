@@ -129,15 +129,7 @@ export default function LoginPage() {
                   >
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      <motion.a
-                        href="#"
-                        className="ml-auto text-sm underline-offset-2 hover:underline"
-                        tabIndex={5}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Forgot your password?
-                      </motion.a>
+                      
                     </div>
                     <div className="relative">
                       <Input
